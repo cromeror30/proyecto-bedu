@@ -1,0 +1,88 @@
+---
+title: "Ejemplo 3. Variantes en la lectura de BDD con R"
+output: html_document
+date: "2024-03-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Ahora utilizaremos otra opción para realizar queries a una BDD con la ayuda 
+# de dplyr que sustituye a SELECT en MySQL y el operador %>%, hay que recordar 
+# que con este comando también podemos realizar búsquedas de forma local.
+
+# Comenzamos instalando las paqueterías necesarias y cargándolas a R
+
+```{r}
+# install.packages("pool")
+# install.packages("dbplyr")
+pacman::p_load(dplyr, pool, DBI)
+```
+
+```{r}
+library(dbplyr)
+library(pool)
+```
+# Se realiza la lectura de la BDD con el comando dbPool, los demás parámetros 
+# se siguen utilizando igual que el ejemplo anterior
+```{r}
+my_db <- dbPool(
+  RMySQL::MySQL(), 
+  dbname = "shinydemo",
+  host = "shiny-demo.csa7qlmguqrf.us-east-1.rds.amazonaws.com",
+  username = "guest",
+  password = "guest"
+)
+ my_db
+```
+# Para ver el contenido de la BDD y realizar una búsqueda se procede de la 
+# siguiente manera
+```{r}
+dbListTables(my_db)
+```
+# Obtener los primeros 5 registros de Country
+```{r}
+my_db %>% tbl("Country") %>% head(5) # library(dplyr)
+```
+# Obtener los primeros 5 registros de CountryLanguage
+```{r, warning=FALSE,comment=FALSE}
+my_db %>% tbl("CountryLanguage") %>% head(5)
+```
+# Otra forma de generar una búsqueda será con la librería DBI, utilizando el 
+```{r}
+rm(my_db)
+```
+
+# comando dbSendQuery
+```{r}
+library(DBI)
+conn <- dbConnect(
+  drv = RMySQL::MySQL(),
+  dbname = "shinydemo",
+  host = "shiny-demo.csa7qlmguqrf.us-east-1.rds.amazonaws.com",
+  username = "guest",
+  password = "guest")
+
+conn
+
+```
+
+
+```{r}
+query <- "SELECT * FROM City LIMIT 5;"
+rs <- dbSendQuery(conn, query)
+
+summary(rs)
+```
+
+
+
+dbFetch(rs)
+
+# Para finalizar nos desconectamos de la BDD
+```{r}
+dbClearResult(rs)
+dbDisconnect(conn)
+```
